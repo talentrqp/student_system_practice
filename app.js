@@ -3,6 +3,7 @@ let svgCaptcha = require('svg-captcha');
 let path = require('path');
 var bodyParser = require('body-parser');
 
+
 //导入自己写好的模块
 let mymdl = require(path.join(__dirname,'/tools/myT.js'));
 //导入session模块
@@ -28,6 +29,10 @@ const MongoClient = require('mongodb').MongoClient;
 
 let app = express();
 
+//引入模板
+app.engine('art', require('express-art-template'));
+//设置模板
+app.set('views', '/static/views');
 //实现静态资源托管
 app.use(express.static("static"));
 
@@ -42,6 +47,10 @@ app.use(bodyParser.urlencoded({
 app.use(session({
     secret: 'keyboard cat', //这是给session加密
 }))
+//获取登录数据,通过模板传入到主页去
+app.get('/', function (req, res) {
+    console.log(req.session.userinfo);
+});
 
 
 //路由一 进入登录页 返回页面给用户
@@ -53,12 +62,20 @@ app.get('/login', (req, res) => {
 app.get('/index', (req, res) => {
     //判断是否登录
 
-    console.log('lLLl');
+    // console.log('lLLl');
     if (req.session.userinfo) {
+        // 获取用户名
+        let userName = req.session.userinfo.userName;
         // console.log('欢迎回来');
+        // console.log(userName);
+        
+        console.log(req.session.userinfo);//当前的登陆的username
+
         // mymdl.mess(res,'欢迎回来','/index');
         // res.redirect(path.join(__dirname,'/static/views/index.html'));
-        res.sendFile(path.join(__dirname,'/static/views/index.html'));
+        res.render(path.join(__dirname,'/static/views/index.art'), {
+            userName
+        });
     } else {
         // console.log("123")
         // res.redirect('/login');
@@ -98,7 +115,7 @@ app.post('/login', (req, res) => {
                         // console.log("Inserted 3 documents into the collection");
                         // callback(result);
                         // console.log('登录成功');
-                        req.session.userinfo = "true"//登陆成功后保存个东西
+                        req.session.userinfo = {userName}//登陆成功后保存个东西
                         // console.log(req.session.userinfo)
                         mymdl.mess(res,'欢迎回来','/index');
                         // res.redirect('/index');
@@ -184,7 +201,7 @@ app.post('/register/deal', (req, res) => {
                     // console.log("Inserted 3 documents into the collection");
                     // callback(result);
                     // console.log('注册成功');
-                    // res.redirect('/login');
+                    res.redirect('/login');
                     mymdl.mess(res,'注册成功','/login');
                 });
             } else {
