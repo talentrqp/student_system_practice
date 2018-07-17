@@ -2,6 +2,9 @@ let express = require('express');
 let svgCaptcha = require('svg-captcha');
 let path = require('path');
 var bodyParser = require('body-parser');
+
+//导入自己写好的模块
+let mymdl = require(path.join(__dirname,'/tools/myT.js'));
 //导入session模块
 var session = require('express-session');
 
@@ -26,7 +29,7 @@ const MongoClient = require('mongodb').MongoClient;
 let app = express();
 
 //实现静态资源托管
-app.use(express.static(path.join(__dirname, '/static')));
+app.use(express.static("static"));
 
 
 //引用bodyParser中间件
@@ -49,13 +52,17 @@ app.get('/login', (req, res) => {
 //路由六 直接进入首页
 app.get('/index', (req, res) => {
     //判断是否登录
+
+    console.log('lLLl');
     if (req.session.userinfo) {
-        console.log('欢迎回来');
+        // console.log('欢迎回来');
+        // mymdl.mess(res,'欢迎回来','/index');
         // res.redirect(path.join(__dirname,'/static/views/index.html'));
         res.sendFile(path.join(__dirname,'/static/views/index.html'));
     } else {
-        console.log("123")
-        res.redirect('/login');
+        // console.log("123")
+        // res.redirect('/login');
+        mymdl.mess(res,'您还没有登录哟','/login');
     }
 })
 
@@ -90,20 +97,23 @@ app.post('/login', (req, res) => {
                         // assert.equal(3, result.ops.length);
                         // console.log("Inserted 3 documents into the collection");
                         // callback(result);
-                        console.log('登录成功');
+                        // console.log('登录成功');
                         req.session.userinfo = "true"//登陆成功后保存个东西
-                        console.log(req.session.userinfo)
-                        res.redirect('/index');
+                        // console.log(req.session.userinfo)
+                        mymdl.mess(res,'欢迎回来','/index');
+                        // res.redirect('/index');
 
                     } else {
                         //提示用户名有问题
-                        console.log("密码输入有误");
-                        res.redirect('/login');
+                        // console.log("密码输入有误");
+                        // res.redirect('/login');
+                        mymdl.mess(res,'密码输入有误','/login');
                     }
                     // console.log(docs)
                 }else{
-                    console.log("用户名输入有误");
-                    res.redirect('/login');
+                    // console.log("用户名输入有误");
+                    // res.redirect('/login');
+                    mymdl.mess(res,'用户名输入有误','/login');
                 }
             });
             // Find some documents
@@ -118,7 +128,8 @@ app.post('/login', (req, res) => {
         });
     } else {
         //跳回登录页
-        res.redirect('/login');
+        // res.redirect('/login');
+        mymdl.mess(res,'验证码输入错误','/login');
     }
     //跳到首页还是打回登录页
 
@@ -173,11 +184,13 @@ app.post('/register/deal', (req, res) => {
                     // console.log("Inserted 3 documents into the collection");
                     // callback(result);
                     // console.log('注册成功');
-                    res.redirect('/login');
+                    // res.redirect('/login');
+                    mymdl.mess(res,'注册成功','/login');
                 });
             } else {
                 //不能注册,打回注册页
-                res.redirect('/register');
+                // res.redirect('/register');
+                mymdl.mess(res,'该用户名已注册','/register');
             }
             // console.log(docs)
         });
@@ -187,12 +200,14 @@ app.post('/register/deal', (req, res) => {
     });
 })
 
+//路由七 删除逻辑
+app.get('/delete',(req,res)=>{
+    delete req.session.userinfo;
+    // res.redirect('/login');
+    mymdl.mess(res,'确定登出吗','/login');
+})
+
 app.listen(2888, () => {
     console.log('监听成功');
 })
 
-//路由七 删除逻辑
-app.get('/delete',(req,res)=>{
-    delete req.session.userinfo;
-    res.redirect('/login');
-})
